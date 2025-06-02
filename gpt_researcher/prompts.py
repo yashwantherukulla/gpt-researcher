@@ -138,6 +138,100 @@ Assume that the current date is {date.today()}.
 """
 
     @staticmethod
+    def generate_swot_analysis_prompt(
+        question: str,
+        context,
+        report_source: str,
+        report_format="apa",
+        total_words=1000,
+        tone=None,
+        language="english",
+    ):
+        """Generates the SWOT analysis prompt for the given question and research summary.
+        Args: 
+            question (str): The question/topic to generate the SWOT analysis for
+            context: The research context/data to base the analysis on
+            report_source (str): The source of the report (web or documents)
+            report_format (str): The format for citations (default: "apa")
+            total_words (int): The minimum word count for the SWOT analysis (default: 1000)
+            tone: The tone for the analysis (optional)
+            language (str): The language for the analysis (default: "english")
+        Returns: 
+            str: The SWOT analysis prompt for the given question and research context
+        """
+        reference_prompt = ""
+        if report_source == ReportSource.Web.value:
+            reference_prompt = f"""
+    You MUST write all used source urls at the end of the SWOT analysis as references, and make sure to not add duplicated sources, but only one reference for each.
+    Every url should be hyperlinked: [url website](url)
+    Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the analysis:
+    eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+    """
+        else:
+            reference_prompt = f"""
+    You MUST write all used source document names at the end of the SWOT analysis as references, and make sure to not add duplicated sources, but only one reference for each.
+    """
+        
+        tone_prompt = f"Write the SWOT analysis in a {tone.value} tone." if tone else ""
+        
+        return f"""
+    Information: "{context}"
+    ---
+    Using the above information, conduct a comprehensive SWOT analysis for the following query or topic: "{question}"
+
+    The SWOT analysis should be detailed, in-depth, and comprehensive, with facts and numbers if available and at least {total_words} words.
+    You should strive to write the analysis as long as you can using all relevant and necessary information provided.
+
+    Your SWOT analysis should be structured as follows:
+
+    ## SWOT Analysis: [Topic/Company/Subject]
+
+    ### Strengths
+    - Identify and analyze internal positive factors, capabilities, and competitive advantages
+    - Support each strength with specific evidence from the research data
+    - Explain how each strength contributes to success or competitive positioning
+
+    ### Weaknesses  
+    - Identify and analyze internal negative factors, limitations, and areas for improvement
+    - Support each weakness with specific evidence from the research data
+    - Explain the potential impact of each weakness on performance or goals
+
+    ### Opportunities
+    - Identify and analyze external positive factors, market trends, and potential growth areas
+    - Support each opportunity with specific evidence from the research data
+    - Explain how each opportunity could be leveraged for advantage
+
+    ### Threats
+    - Identify and analyze external negative factors, risks, and potential challenges
+    - Support each threat with specific evidence from the research data
+    - Explain the potential impact of each threat and mitigation strategies
+
+    ### Strategic Recommendations
+    - Provide actionable recommendations based on the SWOT matrix
+    - Suggest strategies that leverage strengths and opportunities
+    - Propose solutions to address weaknesses and mitigate threats
+    - Prioritize recommendations based on impact and feasibility
+
+    Please follow all of the following guidelines in your SWOT analysis:
+    - You MUST determine concrete and specific conclusions based on the given information. Do NOT use generic or vague statements.
+    - You MUST write the analysis with markdown syntax and {report_format} format.
+    - Use markdown tables or structured formatting when presenting the SWOT matrix to enhance readability.
+    - Each SWOT category should contain at least 3-5 detailed points supported by evidence.
+    - Ensure comprehensive coverage with detailed explanations to meet the {total_words} word minimum requirement.
+    - You MUST prioritize the relevance, reliability, and significance of the sources you use.
+    - You must also prioritize recent information over older data if the source can be trusted.
+    - Use in-text citation references in {report_format} format with markdown hyperlinks: ([in-text citation](url)).
+    - Include quantitative data, statistics, and specific examples wherever possible.
+    - Cross-reference strengths with opportunities and weaknesses with threats for strategic insights.
+    - {reference_prompt}
+    - {tone_prompt}
+
+    You MUST write the SWOT analysis in the following language: {language}.
+    Make this analysis comprehensive, actionable, and strategically valuable.
+    Assume that the current date is {date.today()}.
+    """
+
+    @staticmethod
     def curate_sources(query, sources, max_results=10):
         return f"""Your goal is to evaluate and curate the provided scraped content for the research task: "{query}"
     while prioritizing the inclusion of relevant and high-quality information, especially sources containing statistics, numbers, or concrete data.
@@ -655,6 +749,7 @@ report_type_mapping = {
     ReportType.CustomReport.value: "generate_custom_report_prompt",
     ReportType.SubtopicReport.value: "generate_subtopic_report_prompt",
     ReportType.DeepResearch.value: "generate_deep_research_prompt",
+    ReportType.SWOTAnalysis.value: "generate_swot_analysis_prompt"
 }
 
 
