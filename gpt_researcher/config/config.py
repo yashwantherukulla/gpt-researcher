@@ -14,13 +14,13 @@ class Config:
 
     CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
 
-    def __init__(self, config_path: str | None = None):
+    def __init__(self, config_dict: dict | None = None):
         """Initialize the config class."""
-        self.config_path = config_path
+        self.config_dict = config_dict
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
 
-        config_to_use = self.load_config(config_path)
+        config_to_use = self.load_config(config_dict)
         self._set_attributes(config_to_use)
         self._set_embedding_attributes()
         self._set_llm_attributes()
@@ -111,26 +111,14 @@ class Config:
                 print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
                 self.doc_path = DEFAULT_CONFIG['DOC_PATH']
 
+    
     @classmethod
-    def load_config(cls, config_path: str | None) -> Dict[str, Any]:
-        """Load a configuration by name."""
-        if config_path is None:
+    def load_config(cls, config_obj: dict | None):
+        if config_obj is None:
             return DEFAULT_CONFIG
-
-        # config_path = os.path.join(cls.CONFIG_DIR, config_path)
-        if not os.path.exists(config_path):
-            if config_path and config_path != "default":
-                print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
-                if not config_path.endswith(".json"):
-                    print(f"Do you mean '{config_path}.json'?")
-            return DEFAULT_CONFIG
-
-        with open(config_path, "r") as f:
-            custom_config = json.load(f)
-
-        # Merge with default config to ensure all keys are present
+        
         merged_config = DEFAULT_CONFIG.copy()
-        merged_config.update(custom_config)
+        merged_config.update(config_obj)
         return merged_config
 
     @classmethod

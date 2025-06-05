@@ -53,7 +53,7 @@ class DeepResearchSkill:
         self.concurrency_limit = getattr(researcher.cfg, 'deep_research_concurrency', 2)
         self.websocket = researcher.websocket
         self.tone = researcher.tone
-        self.config_path = researcher.cfg.config_path if hasattr(researcher.cfg, 'config_path') else None
+        self.config_dict = researcher.cfg.config_dict if hasattr(researcher.cfg, 'config_dict') else None
         self.headers = researcher.headers or {}
         self.visited_urls = researcher.visited_urls
         self.learnings = []
@@ -233,7 +233,7 @@ Format each question on a new line starting with 'Question: '"""}
                         report_source=ReportSource.Web.value,
                         tone=self.tone,
                         websocket=self.websocket,
-                        config_path=self.config_path,
+                        config_dict=self.config_dict,
                         headers=self.headers,
                         visited_urls=self.visited_urls
                     )
