@@ -21,6 +21,7 @@ class Config:
         self.embedding_kwargs: Dict[str, Any] = {}
 
         config_to_use = self.load_config(config_dict)
+        self.config = config_to_use
         self._set_attributes(config_to_use)
         self._set_embedding_attributes()
         self._set_llm_attributes()
@@ -30,15 +31,12 @@ class Config:
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         for key, value in config.items():
-            env_value = os.getenv(key)
-            if env_value is not None:
-                value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value
-        retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
+        retriever = config.get("RETRIEVER", "tavily")
         try:
-            self.retrievers = self.parse_retrievers(retriever_env)
+            self.retrievers = self.parse_retrievers(retriever)
         except ValueError as e:
             print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
             self.retrievers = ["tavily"]
@@ -52,24 +50,21 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
-        self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
+        self.reasoning_effort = self.parse_reasoning_effort(self.config.get("REASONING_EFFORT"))
 
     def _handle_deprecated_attributes(self) -> None:
-        if os.getenv("EMBEDDING_PROVIDER") is not None:
+        if self.config.get("EMBEDDING_PROVIDER") is not None:
             warnings.warn(
                 "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
                 FutureWarning,
                 stacklevel=2,
             )
-            self.embedding_provider = (
-                os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider
-            )
 
-            match os.environ["EMBEDDING_PROVIDER"]:
+            match self.config.get("EMBEDDING_PROVIDER"):
                 case "ollama":
-                    self.embedding_model = os.environ["OLLAMA_EMBEDDING_MODEL"]
+                    self.embedding_model = self.config.get("OLLAMA_EMBEDDING_MODEL")
                 case "custom":
-                    self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "custom")
+                    self.embedding_model = self.config.get("OPENAI_EMBEDDING_MODEL", "custom")
                 case "openai":
                     self.embedding_model = "text-embedding-3-large"
                 case "azure_openai":
@@ -87,20 +82,20 @@ class Config:
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."
         )
-        if os.getenv("LLM_PROVIDER") is not None:
+        if self.config.get("LLM_PROVIDER") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.fast_llm_provider = (
-                os.environ["LLM_PROVIDER"] or self.fast_llm_provider
+                self.config.get("LLM_PROVIDER") or self.fast_llm_provider
             )
             self.smart_llm_provider = (
-                os.environ["LLM_PROVIDER"] or self.smart_llm_provider
+                self.config.get("LLM_PROVIDER") or self.smart_llm_provider
             )
-        if os.getenv("FAST_LLM_MODEL") is not None:
+        if self.config.get("FAST_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_model = os.environ["FAST_LLM_MODEL"] or self.fast_llm_model
-        if os.getenv("SMART_LLM_MODEL") is not None:
+            self.fast_llm_model = self.config.get("FAST_LLM_MODEL") or self.fast_llm_model
+        if self.config.get("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
+            self.smart_llm_model = self.config.get("SMART_LLM_MODEL") or self.smart_llm_model
 
     def _set_doc_path(self, config: Dict[str, Any]) -> None:
         self.doc_path = config['DOC_PATH']
@@ -195,41 +190,6 @@ class Config:
     def validate_doc_path(self):
         """Ensure that the folder exists at the doc path"""
         os.makedirs(self.doc_path, exist_ok=True)
-
-    @staticmethod
-    def convert_env_value(key: str, env_value: str, type_hint: Type) -> Any:
-        """Convert environment variable to the appropriate type based on the type hint."""
-        origin = get_origin(type_hint)
-        args = get_args(type_hint)
-
-        if origin is Union:
-            # Handle Union types (e.g., Union[str, None])
-            for arg in args:
-                if arg is type(None):
-                    if env_value.lower() in ("none", "null", ""):
-                        return None
-                else:
-                    try:
-                        return Config.convert_env_value(key, env_value, arg)
-                    except ValueError:
-                        continue
-            raise ValueError(f"Cannot convert {env_value} to any of {args}")
-
-        if type_hint is bool:
-            return env_value.lower() in ("true", "1", "yes", "on")
-        elif type_hint is int:
-            return int(env_value)
-        elif type_hint is float:
-            return float(env_value)
-        elif type_hint in (str, Any):
-            return env_value
-        elif origin is list or origin is List:
-            return json.loads(env_value)
-        elif type_hint is dict:
-            return json.loads(env_value)
-        else:
-            raise ValueError(f"Unsupported type {type_hint} for key {key}")
-
 
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbosity level."""

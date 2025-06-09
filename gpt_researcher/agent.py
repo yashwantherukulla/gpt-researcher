@@ -96,7 +96,7 @@ class GPTResearcher:
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
         self.report_generator: ReportGenerator = ReportGenerator(self)
-        self.context_manager: ContextManager = ContextManager(self)
+        self.context_manager: ContextManager = ContextManager(self, config=self.cfg)
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
         self.deep_researcher: Optional[DeepResearchSkill] = None

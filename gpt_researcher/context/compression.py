@@ -2,6 +2,8 @@ import os
 import asyncio
 from typing import Optional
 from .retriever import SearchAPIRetriever, SectionRetriever
+# from config.variables.base import BaseConfig
+
 from langchain.retrievers import (
     ContextualCompressionRetriever,
 )
@@ -45,13 +47,15 @@ class ContextCompressor:
         embeddings,
         max_results=5,
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+        config = None,
         **kwargs,
     ):
         self.max_results = max_results
         self.documents = documents
         self.kwargs = kwargs
         self.embeddings = embeddings
-        self.similarity_threshold = os.environ.get("SIMILARITY_THRESHOLD", 0.35)
+        # self.similarity_threshold = os.environ.get("SIMILARITY_THRESHOLD", 0.35)
+        self.similarity_threshold = 0.35 if config==None else config["SIMILARITY_THRESHOLD"]
         self.prompt_family = prompt_family
 
     def __get_contextual_retriever(self):

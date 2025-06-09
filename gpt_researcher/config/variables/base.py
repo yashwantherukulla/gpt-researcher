@@ -36,3 +36,4 @@ class BaseConfig(TypedDict):
     DEEP_RESEARCH_DEPTH: int
     DEEP_RESEARCH_BREADTH: int
     REASONING_EFFORT: str
+    

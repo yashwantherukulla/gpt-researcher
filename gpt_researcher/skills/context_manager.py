@@ -8,8 +8,9 @@ from ..actions.utils import stream_output
 class ContextManager:
     """Manages context for the researcher agent."""
 
-    def __init__(self, researcher):
+    def __init__(self, researcher, config):
         self.researcher = researcher
+        self.config = config
 
     async def get_similar_content_by_query(self, query, pages):
         if self.researcher.verbose:
@@ -24,7 +25,8 @@ class ContextManager:
             documents=pages,
             embeddings=self.researcher.memory.get_embeddings(),
             prompt_family=self.researcher.prompt_family,
-            **self.researcher.kwargs
+            **self.researcher.kwargs,
+            config=self.config
         )
         return await context_compressor.async_get_context(
             query=query, max_results=10, cost_callback=self.researcher.add_costs
