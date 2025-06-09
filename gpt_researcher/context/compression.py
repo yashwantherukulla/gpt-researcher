@@ -47,7 +47,7 @@ class ContextCompressor:
         embeddings,
         max_results=5,
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
-        config = None,
+        config: Dict[str, str] | None= None,
         **kwargs,
     ):
         self.max_results = max_results

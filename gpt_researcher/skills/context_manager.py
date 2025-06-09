@@ -8,7 +8,7 @@ from ..actions.utils import stream_output
 class ContextManager:
     """Manages context for the researcher agent."""
 
-    def __init__(self, researcher, config):
+    def __init__(self, researcher, config: Dict[str, str] | None):
         self.researcher = researcher
         self.config = config
 

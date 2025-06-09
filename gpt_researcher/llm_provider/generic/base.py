@@ -84,10 +84,11 @@ class ChatLogger:
 
 class GenericLLMProvider:
 
-    def __init__(self, llm, chat_log: str | None = None,  verbose: bool = True):
+    def __init__(self, llm, chat_log: str | None = None,  verbose: bool = True, config = None):
         self.llm = llm
         self.chat_logger = ChatLogger(chat_log) if chat_log else None
         self.verbose = verbose
+        self.config = config
     @classmethod
     def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True, **kwargs: Any):
         if provider == "openai":
